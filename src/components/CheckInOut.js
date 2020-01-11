@@ -4,7 +4,7 @@ import PinPad from "./PinPad";
 
 export const CheckInOut = ({ record }) => {
   const [isOpen, setOpen] = useState(false);
-  const button = record.checkinTime ? (
+  const button = record.checkinTime && !record.checkoutTime ? (
     <Button
       style={{ backgroundColor: "#b71c1c", color: "white" }}
       onClick={() => setOpen(true)}

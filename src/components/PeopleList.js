@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import employees from "./employees.json";
 import { Table } from "antd";
 import { CheckInOut } from "./CheckInOut";
+import dataService from "../utils/dataService";
 
 const columns = [
   {
@@ -32,7 +33,19 @@ const columns = [
   {
     title: "Havi összes idő",
     dataIndex: "sumTime",
-    key: "sumTime"
+    key: "sumTime",
+    render: sumTime => {
+      const seconds = sumTime / 1000;
+      const minutes = seconds / 60;
+      const hours = minutes / 60;
+      return sumTime ? (
+        <span>
+          {Math.floor(hours)} óra, {Math.floor(minutes) % 60} perc
+        </span>
+      ) : (
+        <span>Nincs bejegyzett óra a hónapban</span>
+      );
+    }
   },
   {
     title: "",
@@ -44,24 +57,34 @@ const columns = [
   }
 ];
 
+const latestEntries = dataService.loadData();
+
 export default () => {
   const onCheckInOut = record => {
-    console.log("TCL: data", data);
     let newRecord = {
       ...record
     };
 
-    if (newRecord.checkinTime) {
+    const isCheckout = record.checkinTime && !record.checkoutTime;
+
+    if (isCheckout) {
       newRecord.checkoutTime = new Date();
+      dataService.addEntry(newRecord);
     } else {
       newRecord.checkinTime = new Date();
+      newRecord.checkoutTime = null;
     }
 
-    setData(data.map(d => (d.name === record.name ? newRecord : d)));
+    setData(data.map(d => (d.name === newRecord.name ? newRecord : d)));
   };
 
   const [data, setData] = useState(
-    employees.map(p => ({ name: p.name, pin: p.pin, onCheckInOut }))
+    employees.map(p => ({
+      ...latestEntries[p.name],
+      name: p.name,
+      pin: p.pin,
+      onCheckInOut
+    }))
   );
 
   return (
