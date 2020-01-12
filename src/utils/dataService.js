@@ -1,34 +1,46 @@
-import low from "lowdb";
-import CustomAdapter from "./CustomAdapter";
+import CsvAdapter from "./CsvAdapter";
+const adapter = new CsvAdapter("db.csv");
 
-const adapter = new CustomAdapter("db.json");
-const db = low(adapter);
+const columns = ["name", "checkinTime", "checkoutTime", "comment"];
+const employeeColumns = ["name", "pin"];
 
-db.defaults({ entries: [] }).write();
+const employees = new CsvAdapter("employees.csv").read(employeeColumns);
 
-export default {
-  loadData: () => {
-    const entries = db.get("entries");
-    const latestEntries = {};
-    const date = new Date();
-    for (let entry of entries) {
-      entry.checkinTime = new Date(entry.checkinTime);
-      entry.checkoutTime = new Date(entry.checkoutTime);
+export let cachedEntries = [];
 
-      if (
-        entry.checkinTime > new Date(date.getFullYear(), date.getMonth(), 1)
-      ) {
-        entry.sumTime =
-          (entry.sumTime ?? 0) +
-          (entry.checkoutTime.getTime() - entry.checkinTime.getTime());
-      }
-      latestEntries[entry.name] = entry;
-    }
-    return latestEntries;
-  },
-  addEntry: record => {
-    db.get("entries")
-      .push(record)
-      .write();
+export function loadData() {
+  const entries = adapter.read(columns);
+  const latestEntries = employees;
+  for (let entry of entries) {
+    entry.checkinTime = new Date(Number(entry.checkinTime));
+    entry.checkoutTime = new Date(Number(entry.checkoutTime));
+
+    const employee = latestEntries.find(e => e.name === entry.name);
+    if (!employee) continue;
+
+    employee.checkinTime = entry.checkinTime;
+    employee.checkoutTime = entry.checkoutTime;
   }
-};
+
+  cachedEntries = entries;
+
+  latestEntries.forEach(e => (e.sumTime = calculateSum(e.name, entries)));
+
+  return latestEntries;
+}
+
+export function addEntry(record) {
+  cachedEntries.push(record);
+  adapter.append(record, columns);
+}
+
+export function calculateSum(name, entries) {
+  const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+
+  let sum = 0;
+  for (let entry of entries.filter(e => e.name === name && e.checkinTime > startOfMonth)) {
+    sum += entry.checkoutTime.getTime() - entry.checkinTime.getTime();
+  }
+
+  return sum;
+}
