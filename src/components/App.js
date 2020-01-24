@@ -1,19 +1,26 @@
-import React, { Component } from "react";
+import React, { useState } from "react";
 import "antd/dist/antd.css";
 import PeopleList from "./PeopleList";
 import Header from "./Header";
+import Admin from "./Admin";
 
 const { app } = window.require("electron").remote;
 
-class App extends Component {
-  render() {
-    return (
+export const SelectedDateContext = React.createContext({ selectedDate: null, setSelectedDate: () => {} });
+
+const App = () => {
+  const [activeWindow, setActiveWindow] = useState("normal");
+  const [selectedMonth, setSelectedMonth] = useState(null);
+
+  return (
+    <SelectedDateContext.Provider value={{ selectedMonth, setSelectedMonth }}>
       <div style={{ padding: 16 }}>
-        <Header></Header>
-        <PeopleList></PeopleList>
+        <Header activeWindow={activeWindow} to={target => setActiveWindow(target)}></Header>
+        {activeWindow === "normal" && <PeopleList></PeopleList>}
+        {activeWindow === "admin" && <Admin></Admin>}
       </div>
-    );
-  }
-}
+    </SelectedDateContext.Provider>
+  );
+};
 
 export default App;

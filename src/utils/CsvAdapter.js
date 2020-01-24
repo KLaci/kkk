@@ -12,6 +12,7 @@ export default class WorkingFileSync {
       const content = fs.readFileSync(this.path, "utf8");
       const data = parse(content, {
         header: true,
+        from_line: 2,
         columns
       });
       return data ?? [];

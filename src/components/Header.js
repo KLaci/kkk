@@ -1,5 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Button } from "antd";
+import { Select } from "antd";
+import PinPad from "./PinPad";
+import { exportData } from "../utils/dataService";
+import { SelectedDateContext } from "./App";
+
+const { Option } = Select;
+const { dialog } = window.require("electron").remote;
 
 const DateComponent = () => {
   const [date, setDate] = useState(new Date());
@@ -13,7 +20,58 @@ const DateComponent = () => {
   return <div style={{}}>{date.toLocaleString("hu-HU")}</div>;
 };
 
-export default () => {
+const dateFormatter = new Intl.DateTimeFormat("hu-HU", { month: "long" });
+
+const DateExporter = () => {
+  const [months, setMonths] = useState([]);
+  const { selectedMonth, setSelectedMonth } = useContext(SelectedDateContext);
+
+  useEffect(() => {
+    const date = new Date();
+    const newMonths = [];
+    let year = date.getFullYear();
+    for (let i = year - 1; i < year + 1; i++) {
+      for (let j = 0; j < 12; j++) {
+        newMonths.push(new Date(i, j, 1));
+      }
+    }
+    setSelectedMonth(newMonths.find(m => m.getFullYear() === new Date().getFullYear() && m.getMonth() === new Date().getMonth()));
+    setMonths(newMonths);
+  }, [setSelectedMonth]);
+
+  const onExportData = () => {
+    const fileName = dialog.showSaveDialogSync({ defaultPath: `${selectedMonth.getFullYear()}-${selectedMonth.getMonth() + 1}.csv` });
+    if (fileName) exportData(selectedMonth, fileName);
+  };
+
+  const handleChange = m => {
+    setSelectedMonth(m);
+  };
+
+  return (
+    <div style={{ display: "flex" }}>
+      <Select value={selectedMonth} style={{ width: 160 }} onChange={handleChange}>
+        {months.map(m => (
+          <Option value={m} key={`${m.year}.${m.month}`}>
+            {m.getFullYear()}. {dateFormatter.format(m)}
+          </Option>
+        ))}
+      </Select>
+      <Button style={{ marginLeft: 16 }} type="danger" onClick={onExportData}>
+        Havi adatok exportálása
+      </Button>
+    </div>
+  );
+};
+
+export default ({ activeWindow, to }) => {
+  const [isOpen, setOpen] = useState(false);
+
+  const onAdminClick = () => {
+    to("admin");
+    setOpen(false);
+  };
+
   return (
     <div
       style={{
@@ -23,7 +81,22 @@ export default () => {
         alignItems: "center"
       }}
     >
-      <Button type="primary">Admin</Button>
+      <div style={{ display: "flex" }}>
+        {activeWindow === "normal" && (
+          <Button type="primary" onClick={() => setOpen(true)}>
+            Admin
+          </Button>
+        )}
+        {activeWindow === "admin" && (
+          <Button type="primary" onClick={() => to("normal")}>
+            Lista
+          </Button>
+        )}
+      </div>
+
+      {activeWindow === "admin" && <DateExporter></DateExporter>}
+
+      <PinPad isCheckout={false} pin={"2662"} onClose={() => setOpen(false)} isOpen={isOpen} onSave={onAdminClick}></PinPad>
       <DateComponent></DateComponent>
     </div>
   );

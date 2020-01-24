@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { InputNumber, Input, Modal } from "antd";
+import { Input, Modal } from "antd";
 
 export default ({ isOpen, onClose, pin, onSave, isCheckout }) => {
   const [currentPin, setCurrentPin] = useState("");
