@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { CheckInOut } from "./CheckInOut";
-import { addEntry, calculateSum, cachedEntries } from "../utils/dataService";
+import { addEntry, calculateSum, cachedEntries } from "../utils/dbService";
 
 export default ({ entry }) => {
   const [employee, setEmployee] = useState(entry);

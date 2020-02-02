@@ -1,5 +1,5 @@
 import React from "react";
-import { loadData } from "../utils/dataService";
+import { loadData } from "../utils/dbService";
 import PersonRow from "./PersonRow";
 
 const latestEntries = loadData();
