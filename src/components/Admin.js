@@ -1,20 +1,29 @@
 import React, { useEffect, useState, useContext } from "react";
-import { loadAdminData } from "../utils/dataService";
-import { Input, Table } from "antd";
+import { loadAdminData, changeComment } from "../utils/dbService";
+import { Input, Table, Button } from "antd";
 import { SelectedDateContext } from "./App";
 import Column from "antd/lib/table/Column";
 
-const AdminRow = ({ data }) => {
+const CommentField = ({ id, comment }) => {
+    const [currentComment, setCurrentComment] = useState(comment);
+    const [originalComment, setOriginalComment] = useState(comment);
+    useEffect(() => {
+        setCurrentComment(comment);
+        setOriginalComment(comment);
+    }, [comment, id]);
+
+    const saveComment = async () => {
+        await changeComment(id, currentComment);
+        setOriginalComment(currentComment);
+    };
+
     return (
-        <tr>
-            <td>{data.name}</td>
-            <td>{data.checkinTime && data.checkinTime.toLocaleDateString("hu-HU")}</td>
-            <td>{data.checkinTime && data.checkinTime.toLocaleTimeString("hu-HU")}</td>
-            <td>{data.checkoutTime && data.checkoutTime.toLocaleTimeString("hu-HU")}</td>
-            <td>
-                <Input value={data.comment}></Input>
-            </td>
-        </tr>
+        <div style={{ display: "flex" }}>
+            <Input value={currentComment} onChange={c => setCurrentComment(c.target.value)}></Input>
+            <Button disabled={originalComment === currentComment} style={{ marginLeft: 8 }} onClick={saveComment}>
+                Mentés
+            </Button>
+        </div>
     );
 };
 
@@ -22,7 +31,7 @@ export default () => {
     const [adminData, setAdminData] = useState([]);
     const { selectedMonth } = useContext(SelectedDateContext);
     useEffect(() => {
-        setAdminData(loadAdminData(selectedMonth));
+        loadAdminData(selectedMonth).then(setAdminData);
     }, [selectedMonth]);
 
     return (
@@ -56,9 +65,7 @@ export default () => {
                 title="Megjegyzés"
                 dataIndex="comment"
                 key="comment"
-                render={comment => {
-                    return <Input value={comment}></Input>;
-                }}
+                render={(comment, { id }) => <CommentField comment={comment} id={id}></CommentField>}
             />
         </Table>
     );

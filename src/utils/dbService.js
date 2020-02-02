@@ -13,8 +13,8 @@ const employees = new CsvAdapter("employees.csv").read(employeeColumns);
 
 export let cachedEntries = [];
 
-export function loadData() {
-    const entries = db.from("workRecords").select("*");
+export async function loadData() {
+    const entries = await db.from("workRecords").select("*");
 
     const latestEntries = employees;
     for (let entry of entries) {
@@ -35,8 +35,28 @@ export function loadData() {
     return latestEntries;
 }
 
-export function addEntry(record) {
-    db("workRecords").insert(record);
+export async function loadAdminData(date) {
+    const entries = await db.from("workRecords").select("*");
+
+    console.log("TCL: loadAdminData -> entries", entries);
+    const currentDate = date ?? new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    console.log("TCL: loadAdminData -> currentDate", currentDate);
+    const nextMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
+    console.log("TCL: loadAdminData -> nextMonth", nextMonth);
+
+    return entries
+        .filter(e => e.checkinTime > currentDate && e.checkinTime < nextMonth)
+        .map(e => ({ ...e, checkinTime: new Date(Number(e.checkinTime)), checkoutTime: new Date(Number(e.checkoutTime)) }));
+}
+
+export async function addEntry({ name, checkinTime, checkoutTime, comment }) {
+    await db("workRecords").insert({ name, checkinTime, checkoutTime, comment });
+}
+
+export async function changeComment(id, comment) {
+    await db("workRecords")
+        .where({ id })
+        .update({ comment });
 }
 
 export function calculateSum(name, entries) {
