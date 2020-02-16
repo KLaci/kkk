@@ -1,15 +1,14 @@
 import CsvAdapter from "./CsvAdapter";
+import { db } from "./dbService";
 
-const adapter = new CsvAdapter("db.csv");
-
-const columns = ["name", "checkinTime", "checkoutTime", "comment"];
 const outputColumns = ["name", "sum"];
 const employeeColumns = ["name", "pin"];
 
 const employees = new CsvAdapter("employees.csv").read(employeeColumns);
 
-export function exportData(date, fileName) {
-    const entries = adapter.read(columns);
+export async function exportData(date, fileName) {
+    const entries = await db.from("workRecords").select("*");
+
     const nextMonth = new Date(date.getFullYear(), date.getMonth() + 1, 1);
 
     const monthEntries = entries.filter(e => e.checkinTime > date && e.checkinTime < nextMonth);
@@ -32,8 +31,9 @@ export function exportData(date, fileName) {
 }
 
 // Currently not in use
-export function exportDataPerRow(date, fileName) {
-    const entries = adapter.read(columns);
+export async function exportDataPerRow(date, fileName) {
+    const entries = await db.from("workRecords").select("*");
+
     const nextMonth = new Date(date.getFullYear(), date.getMonth() + 1, 1);
 
     const monthEntries = entries.filter(e => e.checkinTime > date && e.checkinTime < nextMonth);

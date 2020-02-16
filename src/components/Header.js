@@ -4,7 +4,7 @@ import { Select } from "antd";
 import PinPad from "./PinPad";
 import { exportData } from "../utils/dataService";
 import { SelectedDateContext } from "./App";
-
+import { loadConfig } from "../utils/configService";
 const { Option } = Select;
 const { dialog } = window.require("electron").remote;
 
@@ -64,6 +64,8 @@ const DateExporter = () => {
     );
 };
 
+const config = loadConfig();
+
 export default ({ activeWindow, to }) => {
     const [isOpen, setOpen] = useState(false);
 
@@ -96,7 +98,7 @@ export default ({ activeWindow, to }) => {
 
             {activeWindow === "admin" && <DateExporter></DateExporter>}
 
-            <PinPad isCheckout={false} pin={"2662"} onClose={() => setOpen(false)} isOpen={isOpen} onSave={onAdminClick}></PinPad>
+            <PinPad isCheckout={false} pin={config.adminPin} onClose={() => setOpen(false)} isOpen={isOpen} onSave={onAdminClick}></PinPad>
             <DateComponent></DateComponent>
         </div>
     );
